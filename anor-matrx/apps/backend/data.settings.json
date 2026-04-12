@@ -1,0 +1,31 @@
+{
+  "ollama": {
+    "host": "127.0.0.1",
+    "port": 11434
+  },
+  "gemini": {
+    "apiKey": ""
+  },
+  "openai": {
+    "apiKey": "",
+    "baseUrl": "https://api.openai.com/v1",
+    "model": "gpt-4o-mini"
+  },
+  "github": {
+    "token": ""
+  },
+  "gdrive": {
+    "clientId": ""
+  },
+  "performance": {
+    "gpuName": "auto",
+    "cudaEnabled": true,
+    "dynamicLoadBalancing": true,
+    "performanceMode": true
+  },
+  "cache": {
+    "autoClean": true,
+    "dynamicMemory": true,
+    "randomRecovery": false
+  }
+}

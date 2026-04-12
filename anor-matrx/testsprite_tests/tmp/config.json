@@ -1,0 +1,17 @@
+{
+  "status": "init",
+  "scope": "codebase",
+  "type": "backend",
+  "localEndpoint": "http://localhost:3000/",
+  "serverPort": 5008,
+  "executionArgs": {
+    "projectName": "anor-matrx",
+    "projectPath": "c:\\Users\\ANOR\\3D Objects\\AGNT\\anor-matrx",
+    "testIds": [],
+    "additionalInstruction": "Start the server and verify the /api/diagnostics endpoint.",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-pXbJAjUYbuc7aJTsKunV9yoXUc1WoVLTKyDtF4uxti-4Ii4tXRm6-Ow57O6x8zedCbdcNGcK4Ljv5pOi7ILEGSuwV0GdeZr5_wAY9xlJCQJDjXW7K0Q8_w-SwwKQK6q0ags"
+    }
+  }
+}

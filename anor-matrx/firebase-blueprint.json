@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user settings and profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID" },
+        "displayName": { "type": "string", "description": "User's display name" },
+        "email": { "type": "string", "format": "email", "description": "User's email" },
+        "photoURL": { "type": "string", "description": "User's profile photo URL" },
+        "theme": { "type": "string", "enum": ["dark", "light"], "description": "UI theme preference" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "A single message in a chat conversation",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the user who sent the message" },
+        "role": { "type": "string", "enum": ["user", "assistant"], "description": "Role of the sender" },
+        "content": { "type": "string", "description": "Text content of the message" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the message was sent" }
+      },
+      "required": ["userId", "role", "content", "timestamp"]
+    },
+    "AgentConfig": {
+      "title": "Agent Configuration",
+      "description": "Configuration for a custom AI agent",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the agent" },
+        "name": { "type": "string", "description": "Name of the agent" },
+        "systemPrompt": { "type": "string", "description": "Instructions for the agent" },
+        "permissions": { "type": "array", "items": { "type": "string" }, "description": "Agent capabilities" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation time" }
+      },
+      "required": ["userId", "name", "systemPrompt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/users/{userId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "User chat history"
+    },
+    "/agents/{agentId}": {
+      "schema": "AgentConfig",
+      "description": "Custom agent definitions"
+    }
+  }
+}

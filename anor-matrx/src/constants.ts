@@ -1,0 +1,38 @@
+import { 
+  MessageSquare, 
+  Link2, 
+  Cpu, 
+  Library, 
+  Hammer, 
+  FlaskConical, 
+  Code2, 
+  Terminal, 
+  FolderTree, 
+  Activity, 
+  Globe, 
+  Cloud, 
+  Github, 
+  Database, 
+  Settings2, 
+  Rocket 
+} from "lucide-react";
+
+export const MODULES = [
+  { id: "chat", name: "الدردشة", icon: MessageSquare, description: "واجهة المساعد ثلاثي الأبعاد" },
+  { id: "model-connect", name: "توصيل النماذج", icon: Link2, description: "إدارة API و LLM" },
+  { id: "openclaw", name: "نواة OpenClaw", icon: Cpu, description: "المنطق والتفكير" },
+  { id: "skill-builder", name: "منشئ المهارات", icon: Hammer, description: "بناء المهارات" },
+  { id: "skills", name: "مكتبة المهارات", icon: Library, description: "مستودع الأدوات" },
+  { id: "forge", name: "صياغة الوكلاء", icon: Hammer, description: "بناء وكلاء مخصصين" },
+  { id: "lab", name: "المختبر المعزول", icon: FlaskConical, description: "بيئة برمجية آمنة" },
+  { id: "editor", name: "محرر الأكواد", icon: Code2, description: "محرر Monaco مدمج" },
+  { id: "terminal", name: "المحطة الطرفية", icon: Terminal, description: "صدفة النظام" },
+  { id: "explorer", name: "مستكشف الملفات", icon: FolderTree, description: "ملفات المشروع" },
+  { id: "diagnostics", name: "التشخيصات", icon: Activity, description: "مراقب الموارد" },
+  { id: "system-automation", name: "أتمتة النظام", icon: Globe, description: "مركز قيادة الذكاء الاصطناعي" },
+  { id: "cloud-sync", name: "المزامنة السحابية", icon: Cloud, description: "التخزين السحابي" },
+  { id: "github", name: "مركز GitHub", icon: Github, description: "التحكم في الإصدارات" },
+  { id: "memory", name: "خزنة الذاكرة", icon: Database, description: "قاعدة بيانات Vector" },
+  { id: "fx-setup", name: "إعداد المؤثرات", icon: Settings2, description: "الواجهة والمؤثرات" },
+  { id: "launchpad", name: "منصة الإطلاق", icon: Rocket, description: "التصدير والنشر" },
+];
