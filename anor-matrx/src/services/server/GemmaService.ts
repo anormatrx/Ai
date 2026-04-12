@@ -4,11 +4,11 @@ export class GemmaService {
    */
   public async execute(prompt: string): Promise<string> {
     try {
-      const response = await fetch("http://localhost:11434/api/generate", {
+      const response = await fetch("http://localhost:11435/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gemma-3-4b-it-abliterated",
+          model: "gemma3:latest",
           prompt: prompt,
           stream: false
         })
@@ -24,7 +24,7 @@ export class GemmaService {
       console.error("Gemma execution failed:", error);
       
       // Fallback message with instructions for the user to make it "real"
-      return `[OLLAMA OFFLINE] ⚠️\nلم يتم العثور على محرك Gemma محلياً. لجعل هذا "حقيقياً"، يرجى التأكد من تشغيل Ollama على المنفذ 11434 وتحميل موديل gemma-3-4b-it-abliterated.\n\nخطأ: ${error.message}`;
+      return `[OLLAMA OFFLINE] ⚠️\nلم يتم العثور على محرك Gemma محلياً. لجعل هذا "حقيقياً"، يرجى التأكد من تشغيل Ollama على المنفذ 11435 وتحميل موديل gemma3:latest.\n\nخطأ: ${error.message}`;
     }
   }
 }
