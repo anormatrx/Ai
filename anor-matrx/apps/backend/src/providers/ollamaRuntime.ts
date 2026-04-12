@@ -2,7 +2,7 @@ import axios from 'axios';
 import { activityLog } from '../services/activityLog.service';
 
 const OLLAMA_HOST = '127.0.0.1';
-const OLLAMA_PORT = 11434;
+const OLLAMA_PORT = 11435;
 const OLLAMA_BASE_URL = `http://${OLLAMA_HOST}:${OLLAMA_PORT}`;
 const REQUEST_TIMEOUT = 120000;
 
