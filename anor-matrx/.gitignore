@@ -6,3 +6,16 @@ coverage/
 *.log
 .env*
 !.env.example
+*.pyc
+__pycache__/
+.shadow_vault.db
+OpenClaw/node_modules/
+python_room/
+skills/
+config/
+docs/
+test-results/
+testsprite_tests/
+Documentation/
+logs/
+.env.local

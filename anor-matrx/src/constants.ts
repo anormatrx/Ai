@@ -14,7 +14,8 @@ import {
   Github, 
   Database, 
   Settings2, 
-  Rocket 
+  Rocket,
+  FileCode
 } from "lucide-react";
 
 export const MODULES = [
@@ -26,6 +27,7 @@ export const MODULES = [
   { id: "forge", name: "صياغة الوكلاء", icon: Hammer, description: "بناء وكلاء مخصصين" },
   { id: "lab", name: "المختبر المعزول", icon: FlaskConical, description: "بيئة برمجية آمنة" },
   { id: "editor", name: "محرر الأكواد", icon: Code2, description: "محرر Monaco مدمج" },
+  { id: "python-ide", name: "Python IDE", icon: FileCode, description: "بيئة تطوير Python" },
   { id: "terminal", name: "المحطة الطرفية", icon: Terminal, description: "صدفة النظام" },
   { id: "explorer", name: "مستكشف الملفات", icon: FolderTree, description: "ملفات المشروع" },
   { id: "diagnostics", name: "التشخيصات", icon: Activity, description: "مراقب الموارد" },

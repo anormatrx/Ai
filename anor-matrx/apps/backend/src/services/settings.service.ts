@@ -5,8 +5,27 @@ import { activityLog } from './activityLog.service';
 
 const filePath = path.join(process.cwd(), 'data.settings.json');
 
+function getOllamaConfig() {
+  const raw = process.env.OLLAMA_BASE_URL
+    || process.env.OLLAMA_HOST
+    || 'http://127.0.0.1:11434';
+
+  const normalized = raw.startsWith('http://') || raw.startsWith('https://')
+    ? raw
+    : `http://${raw}`;
+
+  const url = new URL(normalized);
+
+  return {
+    host: url.hostname,
+    port: parseInt(url.port || '11434', 10),
+  };
+}
+
+const ollamaConfig = getOllamaConfig();
+
 const defaultSettings: Settings = SettingsSchema.parse({
-  ollama: { host: '127.0.0.1', port: 11434 },
+  ollama: { host: ollamaConfig.host, port: ollamaConfig.port },
   gemini: { apiKey: '' },
   openai: { apiKey: '', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
   github: { token: '' },

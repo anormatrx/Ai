@@ -3,6 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiMic, FiUpload, FiRepeat, FiSend, FiCpu, FiActivity, FiSettings } from 'react-icons/fi';
 import ReactMarkdown from "react-markdown";
 import { routerService } from "@/services/RouterService";
+import { clientRuntime } from "@/config/client-runtime";
+import { swarmExecute, getSwarmStatus } from "@/lib/systemApi";
+
+const API_BASE = `http://${clientRuntime.ollama.host.split(':')[0]}:${clientRuntime.ports.backend}/api`;
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -138,49 +142,29 @@ export default function ChatInterface() {
     setSystemStatus({ text: "PROCESSING", color: "orange" });
 
     try {
-      setLiveLog("Sending to OpenClaw...");
+      setLiveLog("Sending to Swarm v4...");
       
-      const modelMap: Record<string, string> = {
-        'gemini': 'gemini-3-flash-preview',
-        'openai': 'gpt-4',
-        'gemini-3.1-pro-preview': 'gemini-3.1-pro-preview',
-        'gemini-3-flash-preview': 'gemini-3-flash-preview',
-        'gpt-4': 'gpt-4',
-        'gpt-4o-mini': 'gpt-4o-mini',
-        'gemma3': 'gemma3:latest',
-        'llama3': 'llama3',
-        'auto': 'auto',
-      };
-
-      const apiModel = modelMap[selectedModel] || selectedModel;
-      setLiveLog(`Using: ${apiModel}`);
-
-      const response = await fetch('http://127.0.0.1:3002/api/chat/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: userMessageText, 
-          selectedModel: apiModel
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch response");
-      }
-
-      const data = await response.json();
+      // Use Swarm v4 for intelligent orchestration
+      const result = await swarmExecute(userMessageText, { model: selectedModel });
       
-      if (!data.ok) {
-        throw new Error(data.error || "Request failed");
-      }
-
-      const assistantMessage = data.response || "";
-      const modelUsed = data.model || apiModel;
+      // Extract response from Swarm result
+      const assistantMessage = result?.result?.output?.response || 
+                                result?.result?.output?.code ||
+                                result?.result?.output ||
+                                "Swarm executed successfully";
       
-      if (data.decision) {
-        const decisionLogs = data.decision.executionPlan || '';
-        setMessages((prev) => [...prev, { role: "system", content: `🧠 **OpenClaw**\n\`\`\`\n${decisionLogs}\n\`\`\`` }]);
+      // Show Swarm intelligence info
+      const planInfo = result?.plan;
+      if (planInfo) {
+        const swarmInfo = `🧠 **Swarm v4 Intelligence**
+- **Intent**: ${planInfo.intent}
+- **Agent**: ${result.route}
+- **Confidence**: ${(planInfo.confidence * 100).toFixed(0)}%
+- **Source**: ${planInfo.source}
+${result.decomposition ? `- **Subtasks**: ${result.decomposition.subtasks} (complexity: ${result.decomposition.complexity})` : ''}
+${result.corrections > 0 ? `- **Self-corrections**: ${result.corrections}` : ''}`;
+        
+        setMessages((prev) => [...prev, { role: "system", content: swarmInfo }]);
       }
       
       // Initialize empty assistant message
@@ -211,12 +195,7 @@ export default function ChatInterface() {
       
       await streamTextToUI(assistantMessage);
       setLiveLog(null);
-      
-      if (assistantMessage.includes("OFFLINE")) {
-        setSystemStatus({ text: "OFFLINE - Keys Missing", color: "red" });
-      } else {
-        setSystemStatus({ text: "ONLINE", color: "#0ea5e9" }); // cyan-500
-      }
+      setSystemStatus({ text: "ONLINE", color: "#0ea5e9" }); // cyan-500
     } catch (error: any) {
       setMessages((prev) => [...prev, { role: "assistant", content: error.message || "عذراً، حدث خطأ أثناء معالجة طلبك." }]);
       setSystemStatus({ text: "OFFLINE - Error", color: "red" });

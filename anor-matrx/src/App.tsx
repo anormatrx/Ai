@@ -20,6 +20,7 @@ import Launchpad from "@/components/launchpad/Launchpad";
 import Diagnostics from "@/components/diagnostics/Diagnostics";
 import GithubHub from "@/components/github/GithubHub";
 import MemoryVault from "@/components/memory/MemoryVault";
+import PythonIDE from "@/components/editor/PythonIDE";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Rocket, LogIn, User as UserIcon, Settings, Bell, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -137,8 +138,9 @@ export default function App() {
                 {activeModule === "diagnostics" && <Diagnostics />}
                 {activeModule === "github" && <GithubHub />}
                 {activeModule === "memory" && <MemoryVault />}
+                {activeModule === "python-ide" && <PythonIDE />}
                 {/* Placeholder for other modules */}
-                {!["dashboard", "chat", "model-connect", "lab", "openclaw", "forge", "skill-builder", "skills", "system-automation", "terminal", "fx-setup", "cloud-sync", "editor", "explorer", "launchpad", "diagnostics", "github", "memory"].includes(activeModule) && (
+                {!["dashboard", "chat", "model-connect", "lab", "openclaw", "forge", "skill-builder", "skills", "system-automation", "terminal", "fx-setup", "cloud-sync", "editor", "explorer", "launchpad", "diagnostics", "github", "memory", "python-ide"].includes(activeModule) && (
                   <div className="flex h-full items-center justify-center">
                     <GlassCard className="p-12 text-center max-w-lg">
                       <Cpu className="mx-auto mb-4 h-12 w-12 text-cyan-400 opacity-50" />
