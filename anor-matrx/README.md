@@ -51,9 +51,13 @@
 
 ### Prerequisites
 
-- Node.js 18+
-- Python 3.8+ (for Python agent)
-- Ollama (optional, for local models)
+| Requirement | Version | Required | Notes |
+|------------|---------|----------|-------|
+| **Node.js** | 18+ | ✅ Yes | Runtime for frontend & backend |
+| **Python** | 3.8+ | ✅ Yes | For Python agent execution |
+| **Ollama** | Latest | ❌ Optional | Local AI models |
+| **RAM** | 8GB+ (16GB recommended) | ✅ Yes | System memory |
+| **Storage** | 5GB+ | ✅ Yes | For dependencies & models |
 
 ### Installation
 
