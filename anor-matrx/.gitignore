@@ -12,10 +12,13 @@ __pycache__/
 OpenClaw/node_modules/
 python_room/
 skills/
-config/
 docs/
 test-results/
 testsprite_tests/
 Documentation/
 logs/
 .env.local
+
+# Allow specific config files
+!config/
+config/*.local.json
