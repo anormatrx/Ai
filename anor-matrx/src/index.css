@@ -51,6 +51,11 @@
   51%, 100% { opacity: 0; }
 }
 
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
 .cursor-visible {
   animation: cursor-blink 1s infinite;
 }

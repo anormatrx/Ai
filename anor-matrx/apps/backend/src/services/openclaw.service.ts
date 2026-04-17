@@ -13,7 +13,7 @@ function ensureLogDir() {
 }
 
 export interface OpenClawIntent {
-  type: 'chat' | 'plan' | 'maintenance' | 'web' | 'github' | 'terminal' | 'files' | 'python' | 'code' | 'analysis';
+  type: 'chat' | 'plan' | 'maintenance' | 'web' | 'github' | 'terminal' | 'files' | 'python' | 'code' | 'analysis' | 'python-room';
   confidence: number;
   reasoning: string;
 }
@@ -26,6 +26,7 @@ export interface OpenClawDecision {
   intent: OpenClawIntent;
   tools?: string[];
   executionPlan?: string;
+  executor: 'ollama' | 'python-agent' | 'python-room' | 'backend' | 'external';
 }
 
 export interface OpenClawResult {
@@ -48,23 +49,17 @@ const MODEL_PROVIDER_MAP: Record<string, { provider: string; fallback?: string; 
   'gpt-4': { provider: 'openai', fallback: 'ollama', fallbackProvider: 'ollama' },
   'gpt-4o-mini': { provider: 'openai', fallback: 'ollama', fallbackProvider: 'ollama' },
   
-  // Local models - REAL model names from Ollama
-  'gemma-3-4b-it-abliterated': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'gemma3': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
+  // Local models - VERIFIED models from ollama list
+  // Chat models
   'gemma3:latest': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
+  'gemma3:4b': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
   'gemma4:e4b': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'deepseek-v3.1:671b-cloud': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
+  // Code models
   'deepseek-coder:latest': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
   'qwen2.5-coder:3b': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'qwen3-coder:480b-cloud': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'gpt-oss:120b-cloud': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
+  // Reasoning models
+  'deepseek-r1:latest': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
   'gpt-oss:20b-cloud': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'llama3': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'llama3.1': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'mistral': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'phi3': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'codellama': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  
   // Aliases for models
   'deepseek': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
   'deepseek-v3': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
@@ -72,8 +67,9 @@ const MODEL_PROVIDER_MAP: Record<string, { provider: string; fallback?: string; 
   'gemma4': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
   'qwen': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
   'qwen2.5-coder': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
-  'qwen3-coder': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
   'code': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
+  'reasoning': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
+  'chat': { provider: 'ollama', fallback: 'gemini', fallbackProvider: 'gemini' },
 };
 
 const DEFAULT_MODEL = 'auto';
@@ -85,29 +81,54 @@ function getModelConfig(model: string) {
 function detectIntent(prompt: string): OpenClawIntent {
   const p = prompt.toLowerCase();
   
+  // Check keywords FIRST (regardless of length)
   if (p.includes('fix') || p.includes('bug') || p.includes('error') || p.includes('repair') || p.includes('clean')) {
     return { type: 'maintenance', confidence: 0.85, reasoning: 'Intent detected: maintenance/fix task' };
   }
+  
   if (p.includes('build') || p.includes('create') || p.includes('project') || p.includes('develop') || p.includes('architect')) {
     return { type: 'plan', confidence: 0.9, reasoning: 'Intent detected: planning/building task' };
   }
+  
+  // Check Python FIRST (more specific than terminal)
+  if (p.includes('python') || p.includes('run python') || p.includes('execute python')) {
+    return { type: 'python', confidence: 0.9, reasoning: 'Intent detected: Python execution task' };
+  }
+  
+  // Check terminal
+  if (p.includes('terminal') || p.includes('command') || p.includes('shell') || p.includes('exec')) {
+    return { type: 'terminal', confidence: 0.85, reasoning: 'Intent detected: terminal execution' };
+  }
+  
+  // Check "run" (after python and terminal checks)
+  if (p.includes('run') || p.includes('execute')) {
+    return { type: 'terminal', confidence: 0.8, reasoning: 'Intent detected: execution task' };
+  }
+  
   if (p.includes('web') || p.includes('site') || p.includes('scrape') || p.includes('fetch') || p.includes('http')) {
     return { type: 'web', confidence: 0.8, reasoning: 'Intent detected: web automation task' };
   }
+  
   if (p.includes('git') || p.includes('github') || p.includes('commit') || p.includes('push') || p.includes('pull')) {
     return { type: 'github', confidence: 0.9, reasoning: 'Intent detected: GitHub operation' };
   }
-  if (p.includes('terminal') || p.includes('run') || p.includes('command') || p.includes('shell') || p.includes('exec')) {
-    return { type: 'terminal', confidence: 0.85, reasoning: 'Intent detected: terminal execution' };
-  }
+  
   if (p.includes('file') || p.includes('folder') || p.includes('list') || p.includes('read') || p.includes('write')) {
     return { type: 'files', confidence: 0.8, reasoning: 'Intent detected: file operation' };
   }
-  if (p.includes('python') || p.includes('code') || p.includes('script') || p.includes('function')) {
+  
+  // Check analysis BEFORE code (explain has higher semantic value)
+  if (p.includes('analyze') || p.includes('explain') || p.includes('review')) {
+    return { type: 'analysis', confidence: 0.75, reasoning: 'Intent detected: analysis task' };
+  }
+  
+  if (p.includes('code') || p.includes('function')) {
     return { type: 'code', confidence: 0.85, reasoning: 'Intent detected: code execution' };
   }
-  if (p.includes('analyze') || p.includes('explain') || p.includes('review') || p.includes('what is') || p.includes('how')) {
-    return { type: 'analysis', confidence: 0.75, reasoning: 'Intent detected: analysis task' };
+  
+  // Check for simple chat (short prompts with no keywords)
+  if (p.length < 20) {
+    return { type: 'chat', confidence: 0.8, reasoning: 'Intent detected: short chat' };
   }
   
   return { type: 'chat', confidence: 0.6, reasoning: 'Default intent: general chat' };
@@ -119,24 +140,30 @@ function decideModel(selectedModel: string, intent: OpenClawIntent): string {
     return selectedModel;
   }
   
-  // Auto mode - prioritize best local models (DeepSeek best, then Qwen, then Gemma)
+  // Auto mode - route to appropriate local model based on task type
   if (selectedModel === 'auto' || selectedModel === 'best') {
-    // For code tasks, prefer Qwen
+    // Code tasks -> qwen2.5-coder (fast, excellent for code)
     if (intent.type === 'code' || intent.type === 'maintenance') {
       return 'qwen2.5-coder:3b';
     }
+    // Terminal/execution tasks -> deepseek-coder (has tools)
     if (intent.type === 'terminal') {
       return 'deepseek-coder:latest';
     }
-    if (intent.type === 'plan') {
-      return 'deepseek-v3.1:671b-cloud';
+    // Planning/analysis -> reasoning model (deepseek-r1 or gpt-oss)
+    if (intent.type === 'plan' || intent.type === 'analysis') {
+      return 'deepseek-r1:latest';
     }
-    // Default: best local model (DeepSeek V3 is best overall!)
-    return 'deepseek-v3.1:671b-cloud';
+    // GitHub operations -> code model
+    if (intent.type === 'github') {
+      return 'qwen2.5-coder:3b';
+    }
+    // Default chat -> gemma3 (lightweight, fast)
+    return 'gemma3:latest';
   }
   
   // Default fallback
-  return 'gemini-3-flash-preview';
+  return 'gemma3:latest';
 }
 
 function selectTools(intent: OpenClawIntent): string[] {
@@ -150,8 +177,28 @@ function selectTools(intent: OpenClawIntent): string[] {
     code: ['execute', 'analyze'],
     analysis: ['search', 'explain'],
     chat: ['generate'],
+    'python-room': ['run_python', 'install_package', 'read_file', 'write_file'],
+    python: ['run_python', 'install_package'],
   };
   return toolMap[intent.type] || ['generate'];
+}
+
+function determineExecutor(intent: OpenClawIntent): 'ollama' | 'python-agent' | 'python-room' | 'backend' | 'external' {
+  // OpenClaw determines which executor handles the request
+  switch (intent.type) {
+    case 'python':
+    case 'python-room':
+      return 'python-room'; // Python Room for Python execution
+    case 'terminal':
+      return 'python-agent'; // Agent 2 for terminal tasks
+    case 'files':
+      return 'backend'; // Backend for file operations
+    case 'web':
+    case 'github':
+      return 'external'; // External services
+    default:
+      return 'ollama'; // Default to Ollama for chat/code/analysis
+  }
 }
 
 export async function analyze(prompt: string, selectedModel: string): Promise<OpenClawResult> {
@@ -190,6 +237,9 @@ export async function analyze(prompt: string, selectedModel: string): Promise<Op
   
   activityLog('success', 'openclaw_execution', 'Execution plan ready', 'openclaw', { model, provider: config.provider, tools });
   
+  const executor = determineExecutor(intent);
+  logs.push(`[${new Date().toISOString()}] OpenClaw: Executor determined: ${executor}`);
+  
   const decision: OpenClawDecision = {
     model,
     provider: config.provider,
@@ -198,6 +248,7 @@ export async function analyze(prompt: string, selectedModel: string): Promise<Op
     intent,
     tools,
     executionPlan,
+    executor,
   };
   
   const decisionLog = {

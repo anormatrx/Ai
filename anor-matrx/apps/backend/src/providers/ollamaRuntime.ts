@@ -1,10 +1,13 @@
 import axios from 'axios';
 import { activityLog } from '../services/activityLog.service';
 
-const OLLAMA_HOST = '127.0.0.1';
-const OLLAMA_PORT = 11435;
-const OLLAMA_BASE_URL = `http://${OLLAMA_HOST}:${OLLAMA_PORT}`;
-const REQUEST_TIMEOUT = 120000;
+function getOllamaUrl() {
+  const baseUrl = process.env.OLLAMA_BASE_URL || process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+  return baseUrl.startsWith('http') ? baseUrl : `http://${baseUrl}`;
+}
+
+const OLLAMA_BASE_URL = getOllamaUrl();
+const REQUEST_TIMEOUT = parseInt(process.env.OLLAMA_TIMEOUT_MS || '120000', 10);
 
 export interface OllamaModel {
   name: string;

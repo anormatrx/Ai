@@ -1,14 +1,20 @@
+import { runtime, getResolvedAgentModel } from "../../config/runtime";
+import { resolveModelForTask } from "../agent-routing";
+
 export class GemmaService {
   /**
-   * Executes a prompt using local Gemma 3 4B via Ollama
+   * Executes a prompt using local Gemma via Ollama
+   * Uses unified runtime configuration
    */
   public async execute(prompt: string): Promise<string> {
+    const model = resolveModelForTask("general-chat");
+    
     try {
-      const response = await fetch("http://localhost:11435/api/generate", {
+      const response = await fetch(`${runtime.ollama.baseUrl}/api/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gemma3:latest",
+          model: model,
           prompt: prompt,
           stream: false
         })
@@ -19,12 +25,13 @@ export class GemmaService {
       }
 
       const data = (await response.json()) as { response: string };
-      return `[EXECUTION BY GEMMA (Local)]\n\n${data.response}`;
+      return `[EXECUTION BY GEMMA (Local)]\n\nModel: ${model}\n\n${data.response}`;
     } catch (error: any) {
       console.error("Gemma execution failed:", error);
       
-      // Fallback message with instructions for the user to make it "real"
-      return `[OLLAMA OFFLINE] ⚠️\nلم يتم العثور على محرك Gemma محلياً. لجعل هذا "حقيقياً"، يرجى التأكد من تشغيل Ollama على المنفذ 11435 وتحميل موديل gemma3:latest.\n\nخطأ: ${error.message}`;
+      return `[OLLAMA OFFLINE] ⚠️\nلم يتم العثور على محرك Gemma محلياً.\n\nالمنفذ: ${runtime.ollama.baseUrl}\nالموديل المطلوب: ${model}\n\nخطأ: ${error.message}`;
     }
   }
 }
+
+export default new GemmaService();

@@ -1,4 +1,5 @@
 import React from "react";
+import { clientRuntime, parseHostPort } from "@/config/client-runtime";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ import {
   AlertCircle
 } from "lucide-react";
 
+const { host, port } = parseHostPort(clientRuntime.ollama.baseUrl);
+
 export default function ConfigCenter() {
   const [showKeys, setShowKeys] = React.useState(false);
 
@@ -26,8 +29,8 @@ export default function ConfigCenter() {
       title: "مركز الاتصال",
       icon: Link2,
       items: [
-        { label: "عنوان IP لاتصال Ollama", value: "192.168.1.100", type: "input" },
-        { label: "المنفذ", value: "11434", type: "input" }
+        { label: "عنوان IP لاتصال Ollama", value: host, type: "input" },
+        { label: "المنفذ", value: port, type: "input" }
       ],
       action: "اختبار الاتصال"
     },

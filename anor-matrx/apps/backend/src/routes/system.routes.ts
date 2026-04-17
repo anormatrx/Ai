@@ -1,9 +1,35 @@
 import { Router } from 'express';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 import { loadSettings, publicSettings, saveSettings } from '../services/settings.service';
 import { activityLog, getActivityLogs } from '../services/activityLog.service';
 import { analyze, healthCheck } from '../services/openclaw.service';
-import { checkOllamaHealth } from '../providers/ollamaRuntime';
+import { checkOllamaHealth, listOllamaModels } from '../providers/ollamaRuntime';
 import { checkOpenAIHealth, checkGeminiHealth, checkGitHubHealth, checkGDriveHealth } from '../providers/cloudProviders';
+import { modelBindingService } from '../services/server/ModelBindingService';
+import { resolveSkills } from '../services/server/SkillsResolver';
+
+const RUNTIME = {
+  ollama: {
+    baseUrl: process.env.OLLAMA_BASE_URL || process.env.OLLAMA_HOST || 'http://127.0.0.1:11434',
+    defaultModel: process.env.OLLAMA_MODEL || 'gemma3:latest',
+  },
+  openclaw: {
+    provider: process.env.OPENCLAW_PROVIDER || 'ollama',
+    defaultModel: process.env.OPENCLAW_DEFAULT_MODEL || 'ollama/gemma3:latest',
+  },
+  app: {
+    workspace: process.env.APP_WORKSPACE || '',
+    dataDir: process.env.APP_DATA_DIR || '',
+  },
+  ports: {
+    backend: parseInt(process.env.BACKEND_PORT || '3002', 10),
+    frontend: parseInt(process.env.FRONTEND_PORT || '3000', 10),
+    pythonRoom: parseInt(process.env.PYTHON_ROOM_PORT || '3210', 10),
+  },
+};
 
 export const systemRoutes = Router();
 
@@ -105,6 +131,58 @@ systemRoutes.post('/openclw/chat', async (req, res) => {
   try {
     const result = await analyze(prompt, selectedModel || 'auto');
     res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+systemRoutes.get('/system/health', async (_req, res) => {
+  try {
+    const ollamaHealth = await checkOllamaHealth();
+    const models = await listOllamaModels();
+    const openclawHealth = await healthCheck();
+
+    res.json({
+      ollama: {
+        ok: ollamaHealth.ok,
+        baseUrl: RUNTIME.ollama.baseUrl,
+        models: ollamaHealth.models,
+        error: ollamaHealth.ok ? null : ollamaHealth.message,
+      },
+      openclaw: {
+        ok: openclawHealth.ok,
+        provider: RUNTIME.openclaw.provider,
+        model: RUNTIME.openclaw.defaultModel,
+        version: openclawHealth.version,
+        status: openclawHealth.ok ? 'connected' : 'disconnected',
+        error: openclawHealth.ok ? null : 'OpenClaw check failed',
+      },
+      app: {
+        workspace: RUNTIME.app.workspace,
+        backendPort: RUNTIME.ports.backend,
+        frontendPort: RUNTIME.ports.frontend,
+        pythonRoomPort: RUNTIME.ports.pythonRoom,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+systemRoutes.get('/models/binding', async (_req, res) => {
+  try {
+    const state = await modelBindingService.getState();
+    res.json(state);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+systemRoutes.get('/skills', async (_req, res) => {
+  try {
+    const skills = resolveSkills();
+    console.log('[skills endpoint] Resolved:', JSON.stringify(skills));
+    res.json(skills);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

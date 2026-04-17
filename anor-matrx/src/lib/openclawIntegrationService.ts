@@ -1,4 +1,6 @@
-const API_BASE = 'http://127.0.0.1:3002/api';
+import { clientRuntime } from '@/config/client-runtime';
+
+const API_BASE = `http://${clientRuntime.ollama.host.split(':')[0]}:${clientRuntime.ports.backend}/api`;
 
 export interface OllamaModel {
   name: string;

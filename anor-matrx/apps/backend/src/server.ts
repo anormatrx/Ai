@@ -1,8 +1,8 @@
 import app from './app';
-import config from './config';
 
-const port = config.PORT ?? 3000;
+// استخدم متغير البيئة أو القيمة الافتراضية 8001
+const port = process.env.BACKEND_PORT || 8001;
+
 app.listen(port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Backend listening on port ${port}`);
+  console.log(`🧠 OpenClaw Clean Brain running on http://localhost:${port}`);
 });
